@@ -1,28 +1,28 @@
 # RP Pay
 
-Aplicativo fictício de pagamentos desenvolvido como **estudo pessoal de Flutter e Inteligência Artificial**, com foco na aplicação de boas práticas de desenvolvimento, organização de código e construção de uma experiência próxima à de um aplicativo financeiro real.
+Fictional payments app built as a **personal study of Flutter and Artificial Intelligence**, focused on applying development best practices, code organization, and building an experience close to a real financial app.
 
-> 🚧 **Projeto em desenvolvimento**
+> 🚧 **Project in development**
 >
-> Este projeto está sendo utilizado como laboratório para estudos de Flutter, arquitetura, gerenciamento de estado e utilização de IA durante o processo de desenvolvimento.
+> This project is being used as a lab for studying Flutter, architecture, state management, and the use of AI throughout the development process.
 
-## 📱 Sobre o projeto
+## 📱 About the project
 
-O aplicativo simula a experiência de um aplicativo de pagamentos, apresentando informações financeiras e funcionalidades comuns desse tipo de produto.
+The app simulates the experience of a payments app, presenting financial information and features common to this type of product.
 
-Atualmente, o projeto conta com:
+Currently, the project includes:
 
 * Splash Screen
 * Home
-* Visualização de saldo disponível
-* Ações rápidas
-* Informações do cartão
-* Valor da fatura atual
-* Histórico de transações
-* Área de Pix
-* Menu lateral (Drawer)
+* Available balance view
+* Quick actions
+* Card information
+* Current invoice amount
+* Transaction history
+* Pix area
+* Side menu (Drawer)
 
-Novas funcionalidades e melhorias serão adicionadas conforme a evolução do estudo.
+New features and improvements will be added as the study evolves.
 
 ## 🖼️ Screenshots
 
@@ -38,233 +38,259 @@ Novas funcionalidades e melhorias serão adicionadas conforme a evolução do es
 
 ![Drawer](docs/images/drawer.png)
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 
-O projeto utiliza **MVVM (Model-View-ViewModel)** como referência arquitetural, buscando manter responsabilidades bem definidas entre apresentação, estado e regras da aplicação.
+The project uses **MVVM (Model-View-ViewModel)** as its architectural reference, aiming to keep responsibilities well defined between presentation, state, and application rules.
 
-Também são aplicados alguns princípios do **SOLID**, principalmente com o objetivo de manter o código organizado, desacoplado e mais fácil de evoluir.
+Some **SOLID** principles are also applied, mainly with the goal of keeping the code organized, decoupled, and easier to evolve.
 
-### Gerenciamento de estado
+### SOLID principles
 
-O gerenciamento de estado é realizado utilizando:
+How each principle is applied in the project's MVVM (Feature-First) + Cubit architecture:
+
+* **S — Single Responsibility**: each layer has a single responsibility (`views/` only builds UI, `cubits/` only manages state, `data/repositories/` only accesses data, `data/models/` only structures data).
+* **O — Open/Closed**: states (`HomeState`, `PixState`, etc.) are closed for contract changes but open for extension via subclasses. New features can be added without modifying the existing ones (e.g. `home/` or `pix/`) — the exception is the navigation module (`main_navigation_view.dart` and `custom_drawer.dart`), which, being the app's composition point, requires a small, targeted change to register the new feature.
+* **L — Liskov Substitution**: any repository implementation (e.g. `HomeRepositoryImpl` or a future `HomeMockRepository`) can substitute the abstraction without breaking the corresponding `Cubit`.
+* **I — Interface Segregation**: repositories are segregated per feature (`HomeRepository.fetchItems()`, `PixRepository.getPixActions()`), avoiding a monolithic repository with methods a feature doesn't use.
+* **D — Dependency Inversion**: Cubits depend on the repository's abstraction (injected via constructor), never on the concrete implementation, which makes it easier to swap the data source and write tests with mocks.
+
+### State management
+
+State management is handled using:
 
 * **BLoC**
 * **Cubit**
 
-A escolha permite separar o estado e os eventos da camada de apresentação, mantendo os widgets mais focados na construção da interface.
+This choice separates state and events from the presentation layer, keeping widgets more focused on building the interface.
 
-## 📂 Estrutura do projeto
+## 📂 Project structure
 
-O projeto utiliza uma organização **Feature-First**, separando as funcionalidades da aplicação em módulos independentes.
+The project uses a **Feature-First** organization, separating the app's functionality into independent modules.
 
 ```text
 lib/
-├── core/                                      # 🌐 Camada global e compartilhada
+├── core/                                      # 🌐 Global, shared layer
 │   ├── constants/
-│   │   └── app_colors.dart                    # Paleta de cores centralizada
+│   │   └── app_colors.dart                    # Centralized color palette
 │   │
 │   ├── theme/
-│   │   └── app_theme.dart                     # Configuração do ThemeData (Material 3)
+│   │   └── app_theme.dart                     # ThemeData configuration (Material 3)
 │   │
 │   └── widgets/
-│       ├── custom_button.dart                 # Botão reutilizável com estado de loading
-│       └── custom_drawer.dart                 # Menu lateral navegável
+│       ├── custom_button.dart                 # Reusable button with loading state
+│       └── custom_drawer.dart                 # Navigable side menu
 │
-├── features/                                  # 📦 Módulos organizados por funcionalidade
+├── features/                                  # 📦 Modules organized by feature
 │   │
 │   ├── splash/                                # 🚀 Splash Screen
 │   │   ├── cubits/
-│   │   │   ├── splash_cubit.dart              # Gerenciamento do fluxo de inicialização
-│   │   │   └── splash_state.dart              # Estados da Splash
+│   │   │   ├── splash_cubit.dart              # Startup flow management
+│   │   │   └── splash_state.dart              # Splash states
 │   │   │
 │   │   └── views/
-│   │       └── splash_view.dart                # Interface da Splash
+│   │       └── splash_view.dart                # Splash interface
 │   │
-│   ├── navigation/                            # 🧭 Navegação principal
+│   ├── navigation/                            # 🧭 Main navigation
 │   │   ├── cubits/
-│   │   │   ├── navigation_cubit.dart          # Gerenciamento da aba ativa
-│   │   │   └── navigation_state.dart          # Estado da navegação
+│   │   │   ├── navigation_cubit.dart          # Active tab management
+│   │   │   └── navigation_state.dart          # Navigation state
 │   │   │
 │   │   └── views/
-│   │       └── main_navigation_view.dart       # Navegação principal
+│   │       └── main_navigation_view.dart       # Main navigation
 │   │
 │   ├── home/                                  # 🏠 Dashboard / Home
 │   │   ├── cubits/
-│   │   │   ├── home_cubit.dart                # Estado e regras da Home
-│   │   │   └── home_state.dart                # Estados da Home
+│   │   │   ├── home_cubit.dart                # Home state and rules
+│   │   │   └── home_state.dart                # Home states
 │   │   │
 │   │   ├── data/
 │   │   │   ├── models/
-│   │   │   │   └── home_data_model.dart       # Modelo dos dados da Home
+│   │   │   │   └── home_data_model.dart       # Home data model
 │   │   │   │
 │   │   │   └── repositories/
-│   │   │       └── home_repository.dart        # Abstração e implementação dos dados
+│   │   │       └── home_repository.dart        # Data abstraction and implementation
 │   │   │
 │   │   └── views/
-│   │       └── home_view.dart                  # Interface da Home
+│   │       └── home_view.dart                  # Home interface
 │   │
-│   └── pix/                                   # ⚡ Área Pix
+│   └── pix/                                   # ⚡ Pix area
 │       ├── cubits/
-│       │   ├── pix_cubit.dart                 # Estado e regras da área Pix
-│       │   └── pix_state.dart                 # Estados do Pix
+│       │   ├── pix_cubit.dart                 # Pix area state and rules
+│       │   └── pix_state.dart                 # Pix states
 │       │
 │       ├── data/
 │       │   ├── models/
-│       │   │   └── pix_action_model.dart       # Modelo das ações Pix
+│       │   │   └── pix_action_model.dart       # Pix actions model
 │       │   │
 │       │   └── repositories/
-│       │       └── pix_repository.dart         # Abstração e implementação dos dados
+│       │       └── pix_repository.dart         # Data abstraction and implementation
 │       │
 │       └── views/
-│           └── pix_view.dart                   # Interface das ações Pix
+│           └── pix_view.dart                   # Pix actions interface
 │
-└── main.dart                                  # 🎬 Ponto de entrada da aplicação
+└── main.dart                                  # 🎬 Application entry point
 ```
 
-### Organização das camadas
+### Layer organization
 
-A estrutura segue uma abordagem **Feature-First**, onde cada funcionalidade possui seus próprios componentes e regras.
+The structure follows a **Feature-First** approach, where each feature has its own components and rules.
 
-* **`core/`** — concentra recursos compartilhados entre diferentes funcionalidades, como tema, constantes e widgets reutilizáveis.
-* **`features/`** — agrupa as funcionalidades da aplicação, mantendo cada domínio isolado e facilitando sua evolução.
-* **`cubits/`** — concentra o gerenciamento de estado e a lógica relacionada à apresentação.
-* **`views/`** — contém as interfaces responsáveis pela apresentação dos dados e interação com o usuário.
-* **`data/models/`** — contém os modelos utilizados para representar os dados de cada funcionalidade.
-* **`data/repositories/`** — concentra a abstração do acesso aos dados, permitindo substituir posteriormente a fonte de dados sem impactar diretamente a camada de apresentação.
+* **`core/`** — holds resources shared across different features, such as theme, constants, and reusable widgets.
+* **`features/`** — groups the app's features, keeping each domain isolated and easier to evolve.
+* **`cubits/`** — holds state management and presentation-related logic.
+* **`views/`** — contains the interfaces responsible for presenting data and handling user interaction.
+* **`data/models/`** — contains the models used to represent each feature's data.
+* **`data/repositories/`** — holds the data access abstraction, allowing the data source to be swapped later without directly impacting the presentation layer.
 
-Essa organização busca favorecer **separação de responsabilidades, baixo acoplamento e facilidade de manutenção**, aplicando princípios do **SOLID** sempre que fizer sentido para o contexto da aplicação.
+This organization aims to favor **separation of concerns, low coupling, and ease of maintenance**, applying **SOLID** principles whenever it makes sense for the application's context.
 
-## 🛠️ Tecnologias
+## 🛠️ Technologies
 
-| Tecnologia       | Utilização                      |
-| ---------------- | ------------------------------- |
-| Flutter          | Framework principal             |
-| Dart             | Linguagem                       |
-| BLoC / Cubit     | Gerenciamento de estado         |
-| MVVM             | Arquitetura                     |
-| SOLID            | Princípios de design            |
-| Gemini 3.6 Flash | Apoio ao desenvolvimento com IA |
+| Technology       | Usage                       |
+| ---------------- | ---------------------------- |
+| Flutter          | Main framework               |
+| Dart             | Language                     |
+| BLoC / Cubit     | State management             |
+| MVVM             | Architecture                 |
+| SOLID            | Design principles            |
+| Gemini 3.6 Flash | Development support with AI  |
+| Claude Code      | Development support with AI  |
+| Dart/Flutter MCP | Claude Code plugin (`dart-flutter`) providing analysis, hot reload/restart, LSP, and runtime error inspection tools |
 
 **Flutter:** `3.44`
 
-> TODO: adicionar demais bibliotecas e dependências utilizadas no projeto.
+> TODO: add other libraries and dependencies used in the project.
 
-## 🤖 Inteligência Artificial
+## 🤖 Artificial Intelligence
 
-A **Inteligência Artificial faz parte do processo de desenvolvimento deste projeto**.
+**Artificial Intelligence is part of this project's development process.**
 
-O **Gemini 3.6 Flash** foi utilizado como ferramenta de apoio durante o desenvolvimento, principalmente como recurso de estudo, exploração de alternativas e auxílio na implementação.
+**Gemini 3.6 Flash** and **Claude Code** were used as support tools during development, mainly as a study resource, for exploring alternatives, and assisting with implementation.
 
-O objetivo não é apenas utilizar IA para gerar código, mas explorar como ferramentas de IA podem fazer parte do processo de desenvolvimento de software mantendo a responsabilidade técnica sobre as decisões e o código produzido.
+The goal is not just to use AI to generate code, but to explore how AI tools can be part of the software development process while maintaining technical ownership of the decisions and code produced.
 
-> TODO: documentar exemplos de utilização da IA e decisões tomadas durante o desenvolvimento.
+> TODO: document examples of AI usage and decisions made during development.
 
-## 🚀 Como executar
+## 🚀 Getting started
 
-### Pré-requisitos
+### Prerequisites
 
-* Flutter instalado
-* Dart SDK compatível com a versão do Flutter utilizada
-* Android Studio ou Xcode, caso deseje executar em dispositivos móveis
+* Flutter installed
+* Dart SDK compatible with the Flutter version used
+* Android Studio or Xcode, if you want to run on mobile devices
 
-### Executando o projeto
+### Running the project
 
-Clone o repositório:
+Clone the repository:
 
 ```bash
 git clone https://github.com/ronipaschoal/rppay.git
 ```
 
-Acesse o diretório:
+Go to the directory:
 
 ```bash
 cd rppay
 ```
 
-Instale as dependências:
+Install dependencies:
 
 ```bash
 flutter pub get
 ```
 
-Execute o aplicativo:
+Run the app:
 
 ```bash
 flutter run
 ```
 
-## 🧪 Testes
+### Dart/Flutter MCP (optional, for Claude Code)
 
-> TODO: adicionar testes unitários, testes de widget e/ou testes de integração.
+This project can be assisted by the Dart/Flutter MCP server via the `dart-flutter` Claude Code plugin, which provides tools for analysis, hot reload/restart, LSP, pub, and runtime error inspection. It is installed at the user scope (not committed to this repo). To install it:
+
+```bash
+claude plugin install dart-flutter@dart-flutter
+```
+
+Check it's connected with:
+
+```bash
+claude mcp list
+```
+
+## 🧪 Tests
+
+> TODO: add unit tests, widget tests, and/or integration tests.
 
 ## 🔄 CI/CD
 
-> TODO: configurar e documentar pipeline de CI/CD.
+> TODO: set up and document the CI/CD pipeline.
 
-## 🌐 API e dados
+## 🌐 API and data
 
-Atualmente o projeto possui execução **local**, sem dependência de serviços externos.
+The project currently runs **locally**, with no dependency on external services.
 
-> TODO: definir API utilizada e estratégia de comunicação com backend.
+> TODO: define the API used and the backend communication strategy.
 
-> TODO: definir estratégia de persistência/cache local.
+> TODO: define a local persistence/cache strategy.
 
-## 💡 Decisões técnicas
+## 💡 Technical decisions
 
-> TODO: documentar as principais decisões arquiteturais e técnicas tomadas durante o desenvolvimento.
+> TODO: document the main architectural and technical decisions made during development.
 
-Alguns pontos que podem ser documentados futuramente:
+Some points that may be documented in the future:
 
-* Motivos para utilização de MVVM
-* Escolha de BLoC/Cubit
-* Organização das features
-* Estratégia de reutilização de componentes
-* Separação de responsabilidades
-* Tratamento de estados
-* Estratégia de testes
+* Reasons for using MVVM
+* Choice of BLoC/Cubit
+* Feature organization
+* Component reuse strategy
+* Separation of concerns
+* State handling
+* Testing strategy
 
 ## 🗺️ Roadmap
 
-* [x] Definir e documentar estrutura de pastas
-* [ ] Criar documentação dos requisitos
-* [ ] Implementar camada de dados
-* [ ] Definir API
-* [ ] Implementar persistência local
-* [ ] Adicionar testes unitários
-* [ ] Adicionar testes de widget
-* [ ] Adicionar testes de integração
-* [ ] Configurar CI/CD
-* [ ] Documentar decisões arquiteturais
-* [ ] Adicionar novas funcionalidades
-* [ ] Melhorar cobertura de testes
-* [ ] Documentar utilização de IA
+* [x] Define and document folder structure
+* [ ] Create requirements documentation
+* [ ] Implement the data layer
+* [ ] Define API
+* [ ] Implement local persistence
+* [ ] Add unit tests
+* [ ] Add widget tests
+* [ ] Add integration tests
+* [ ] Set up CI/CD
+* [ ] Document architectural decisions
+* [ ] Add new features
+* [ ] Improve test coverage
+* [ ] Document AI usage
 
-## 📚 Objetivo do estudo
+## 📚 Study goal
 
-Este projeto tem como objetivo explorar, na prática:
+This project aims to explore, in practice:
 
-* Desenvolvimento de aplicações com Flutter
-* Arquitetura MVVM
-* Gerenciamento de estado com BLoC/Cubit
-* Princípios SOLID
-* Organização e escalabilidade de código
-* Desenvolvimento de interfaces para aplicações financeiras
-* Utilização de Inteligência Artificial no desenvolvimento de software
-* Evolução incremental de uma aplicação Flutter
+* Application development with Flutter
+* MVVM architecture
+* State management with BLoC/Cubit
+* SOLID principles
+* Code organization and scalability
+* Interface development for financial applications
+* Use of Artificial Intelligence in software development
+* Incremental evolution of a Flutter application
 
 ## 📌 Status
 
-**Em desenvolvimento 🚧**
+**In development 🚧**
 
-Este projeto é um laboratório pessoal e pode sofrer alterações de arquitetura, implementação e funcionalidades conforme novos conceitos forem estudados e aplicados.
+This project is a personal lab and may undergo architecture, implementation, and feature changes as new concepts are studied and applied.
 
 ---
 
-## 👨‍💻 Autor
+## 👨‍💻 Author
 
 **Roni Paschoal**
 
-Desenvolvedor de Software com experiência em desenvolvimento de aplicações utilizando Flutter e outras tecnologias para desenvolvimento de software.
+Software Developer with experience building applications using Flutter and other software development technologies.
 
 [GitHub](https://github.com/ronipaschoal)
 
