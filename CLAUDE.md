@@ -19,7 +19,11 @@ flutter test --plain-name "test name"  # run a single test by name
 
 Flutter SDK: 3.44, Dart SDK: `^3.12.0` (see `pubspec.yaml`).
 
-Note: `test/widget_test.dart` is still the default Flutter counter-app template — it does not exercise this app (`MyApp` renders `SplashPage`, not a counter) and will fail if run as-is. There is no other test coverage yet.
+## Tests
+
+Test files under `test/` mirror the `lib/` structure (e.g. `lib/features/home/cubits/home_cubit.dart` → `test/features/home/cubits/home_cubit_test.dart`). `test/widget_test.dart` is a smoke test that pumps `MyApp` and verifies navigation from `SplashPage` to `MainNavigationPage`.
+
+Cubits are tested with `bloc_test` (dev dependency) against hand-written fake repositories (implementing the feature's abstract `Repository` interface) rather than a mocking framework — simple enough given each repository has one or two methods. Repositories are tested directly against their simulated/hardcoded data. Follow this pattern for new features: fake the repository, assert emitted state sequences with `blocTest`.
 
 ## MCP
 
