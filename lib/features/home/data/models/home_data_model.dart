@@ -1,24 +1,13 @@
-import 'package:equatable/equatable.dart';
+import '../../domain/entities/home_data_entity.dart';
 
-class HomeDataModel extends Equatable {
-  final String id;
-  final String title;
-  final String description;
-  final double amount;
-  final String date;
-  final bool isIncome;
-  final String category;
-
+class HomeDataModel extends HomeDataEntity {
   const HomeDataModel({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.amount,
-    required this.date,
-    required this.isIncome,
-    required this.category,
+    required super.id,
+    required super.title,
+    required super.description,
+    required super.amount,
+    required super.date,
+    required super.isIncome,
+    required super.category,
   });
-
-  @override
-  List<Object?> get props => [id, title, description, amount, date, isIncome, category];
 }

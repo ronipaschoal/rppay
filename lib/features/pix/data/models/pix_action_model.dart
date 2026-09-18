@@ -1,13 +1,9 @@
-import 'package:flutter/material.dart';
+import '../../domain/entities/pix_action_entity.dart';
 
-class PixActionModel {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-
+class PixActionModel extends PixActionEntity {
   const PixActionModel({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
+    required super.title,
+    required super.subtitle,
+    required super.type,
   });
 }
