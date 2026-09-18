@@ -40,7 +40,7 @@ New features and improvements will be added as the study evolves.
 
 ## 🏗️ Architecture
 
-The project uses **MVVM (Model-View-ViewModel)** as its architectural reference, aiming to keep responsibilities well defined between presentation, state, and application rules.
+The project uses **MVVM (Model-View-ViewModel)** as its architectural reference, aiming to keep responsibilities well defined between presentation, state, and application rules. Each feature is additionally organized in `presentation/`, `domain/`, and `data/` layers (see [Project structure](#-project-structure)).
 
 Some **SOLID** principles are also applied, mainly with the goal of keeping the code organized, decoupled, and easier to evolve.
 
@@ -48,11 +48,11 @@ Some **SOLID** principles are also applied, mainly with the goal of keeping the 
 
 How each principle is applied in the project's MVVM (Feature-First) + Cubit architecture:
 
-* **S — Single Responsibility**: each layer has a single responsibility (`views/` only builds UI, `cubits/` only manages state, `data/repositories/` only accesses data, `data/models/` only structures data).
+* **S — Single Responsibility**: each layer has a single responsibility (`presentation/views/` only builds UI, `presentation/cubits/` only manages state, `domain/` only defines entities and contracts, `data/repositories/` only accesses data, `data/models/` only structures data).
 * **O — Open/Closed**: states (`HomeState`, `PixState`, etc.) are closed for contract changes but open for extension via subclasses. New features can be added without modifying the existing ones (e.g. `home/` or `pix/`) — the exception is the navigation module (`main_navigation_view.dart` and `custom_drawer.dart`), which, being the app's composition point, requires a small, targeted change to register the new feature.
 * **L — Liskov Substitution**: any repository implementation (e.g. `HomeRepositoryImpl` or a future `HomeMockRepository`) can substitute the abstraction without breaking the corresponding `Cubit`.
 * **I — Interface Segregation**: repositories are segregated per feature (`HomeRepository.fetchItems()`, `PixRepository.getPixActions()`), avoiding a monolithic repository with methods a feature doesn't use.
-* **D — Dependency Inversion**: Cubits depend on the repository's abstraction (injected via constructor), never on the concrete implementation, which makes it easier to swap the data source and write tests with mocks.
+* **D — Dependency Inversion**: Cubits depend on the repository's abstraction (`domain/repositories/`, injected via constructor), never on the concrete implementation (`data/repositories/`), which makes it easier to swap the data source and write tests with mocks.
 
 ### State management
 
@@ -65,10 +65,13 @@ This choice separates state and events from the presentation layer, keeping widg
 
 ## 📂 Project structure
 
-The project uses a **Feature-First** organization, separating the app's functionality into independent modules.
+The project uses a **Feature-First** organization, separating the app's functionality into independent modules. Inside each feature, code is split into three layers: `presentation/`, `domain/`, and `data/`.
 
 ```text
 lib/
+├── app/                                       # 🧩 Application root
+│   └── app.dart                               # App widget (MaterialApp, theme, initial page)
+│
 ├── core/                                      # 🌐 Global, shared layer
 │   ├── constants/
 │   │   └── app_colors.dart                    # Centralized color palette
@@ -83,64 +86,99 @@ lib/
 ├── features/                                  # 📦 Modules organized by feature
 │   │
 │   ├── splash/                                # 🚀 Splash Screen
-│   │   ├── cubits/
-│   │   │   ├── splash_cubit.dart              # Startup flow management
-│   │   │   └── splash_state.dart              # Splash states
-│   │   │
-│   │   └── views/
-│   │       └── splash_view.dart                # Splash interface
+│   │   └── presentation/
+│   │       ├── cubits/
+│   │       │   ├── splash_cubit.dart          # Startup flow management
+│   │       │   └── splash_state.dart          # Splash states
+│   │       │
+│   │       └── views/
+│   │           └── splash_view.dart           # Splash interface
 │   │
 │   ├── navigation/                            # 🧭 Main navigation
-│   │   ├── cubits/
-│   │   │   ├── navigation_cubit.dart          # Active tab management
-│   │   │   └── navigation_state.dart          # Navigation state
-│   │   │
-│   │   └── views/
-│   │       └── main_navigation_view.dart       # Main navigation
+│   │   └── presentation/
+│   │       ├── cubits/
+│   │       │   ├── navigation_cubit.dart      # Active tab management
+│   │       │   └── navigation_state.dart      # Navigation state
+│   │       │
+│   │       └── views/
+│   │           └── main_navigation_view.dart  # Main navigation
 │   │
 │   ├── home/                                  # 🏠 Dashboard / Home
-│   │   ├── cubits/
-│   │   │   ├── home_cubit.dart                # Home state and rules
-│   │   │   └── home_state.dart                # Home states
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── home_data_entity.dart      # Home business entity
+│   │   │   │
+│   │   │   └── repositories/
+│   │   │       └── home_repository.dart       # Repository contract (abstraction)
 │   │   │
 │   │   ├── data/
 │   │   │   ├── models/
-│   │   │   │   └── home_data_model.dart       # Home data model
+│   │   │   │   └── home_data_model.dart       # Home data model (extends the entity)
 │   │   │   │
 │   │   │   └── repositories/
-│   │   │       └── home_repository.dart        # Data abstraction and implementation
+│   │   │       └── home_repository_impl.dart  # Repository implementation
 │   │   │
-│   │   └── views/
-│   │       └── home_view.dart                  # Home interface
+│   │   └── presentation/
+│   │       ├── cubits/
+│   │       │   ├── home_cubit.dart            # Home state and rules
+│   │       │   └── home_state.dart            # Home states
+│   │       │
+│   │       └── views/
+│   │           ├── home_view.dart             # Home interface
+│   │           └── widgets/                   # Home-specific widgets
+│   │               ├── balance_card.dart
+│   │               ├── quick_actions.dart
+│   │               ├── credit_card_banner.dart
+│   │               ├── investment_banner.dart
+│   │               └── transaction_tile.dart
 │   │
 │   └── pix/                                   # ⚡ Pix area
-│       ├── cubits/
-│       │   ├── pix_cubit.dart                 # Pix area state and rules
-│       │   └── pix_state.dart                 # Pix states
+│       ├── domain/
+│       │   ├── entities/
+│       │   │   └── pix_action_entity.dart     # Pix action entity
+│       │   │
+│       │   └── repositories/
+│       │       └── pix_repository.dart        # Repository contract (abstraction)
 │       │
 │       ├── data/
 │       │   ├── models/
-│       │   │   └── pix_action_model.dart       # Pix actions model
+│       │   │   └── pix_action_model.dart      # Pix actions model (extends the entity)
 │       │   │
 │       │   └── repositories/
-│       │       └── pix_repository.dart         # Data abstraction and implementation
+│       │       └── pix_repository_impl.dart   # Repository implementation
 │       │
-│       └── views/
-│           └── pix_view.dart                   # Pix actions interface
+│       └── presentation/
+│           ├── cubits/
+│           │   ├── pix_cubit.dart             # Pix area state and rules
+│           │   └── pix_state.dart             # Pix states
+│           │
+│           └── views/
+│               └── pix_view.dart              # Pix actions interface
 │
-└── main.dart                                  # 🎬 Application entry point
+└── main.dart                                  # 🎬 Application entry point (runs App)
 ```
 
 ### Layer organization
 
-The structure follows a **Feature-First** approach, where each feature has its own components and rules.
+The structure follows a **Feature-First** approach, where each feature has its own components and rules, split into three layers:
 
+| Folder          | Responsibility                                                  | Depends on |
+| --------------- | --------------------------------------------------------------- | ---------- |
+| `presentation/` | Show data and react to user interactions (`cubits/`, `views/`)  | `domain/`  |
+| `domain/`       | Business rules and contracts (`entities/`, `repositories/` interfaces) | nothing (pure Dart) |
+| `data/`         | How the data is obtained (`models/`, `repositories/` implementations) | `domain/`  |
+
+* **`app/`** — holds the application root (`App`), which configures `MaterialApp`, the theme, and the initial page.
 * **`core/`** — holds resources shared across different features, such as theme, constants, and reusable widgets.
 * **`features/`** — groups the app's features, keeping each domain isolated and easier to evolve.
-* **`cubits/`** — holds state management and presentation-related logic.
-* **`views/`** — contains the interfaces responsible for presenting data and handling user interaction.
-* **`data/models/`** — contains the models used to represent each feature's data.
-* **`data/repositories/`** — holds the data access abstraction, allowing the data source to be swapped later without directly impacting the presentation layer.
+* **`presentation/cubits/`** — holds state management and presentation-related logic.
+* **`presentation/views/`** — contains the interfaces responsible for presenting data and handling user interaction; `views/widgets/` holds widgets used only by that feature's view.
+* **`domain/entities/`** — the business entities, free of Flutter or data-source details.
+* **`domain/repositories/`** — the repository abstractions (contracts) that Cubits depend on.
+* **`data/models/`** — the data models, which extend the domain entities and are where serialization (JSON, Firebase, etc.) will live.
+* **`data/repositories/`** — the concrete repository implementations, allowing the data source to be swapped later without directly impacting the presentation layer.
+
+Features without business rules or data access (`splash`, `navigation`) only have `presentation/`.
 
 This organization aims to favor **separation of concerns, low coupling, and ease of maintenance**, applying **SOLID** principles whenever it makes sense for the application's context.
 

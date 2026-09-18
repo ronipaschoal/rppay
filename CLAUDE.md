@@ -21,7 +21,7 @@ Flutter SDK: 3.44, Dart SDK: `^3.12.0` (see `pubspec.yaml`).
 
 ## Tests
 
-Test files under `test/` mirror the `lib/` structure (e.g. `lib/features/home/cubits/home_cubit.dart` → `test/features/home/cubits/home_cubit_test.dart`). `test/widget_test.dart` is a smoke test that pumps `MyApp` and verifies navigation from `SplashPage` to `MainNavigationPage`.
+Test files under `test/` mirror the `lib/` structure (e.g. `lib/features/home/presentation/cubits/home_cubit.dart` → `test/features/home/presentation/cubits/home_cubit_test.dart`). `test/widget_test.dart` is a smoke test that pumps `App` and verifies navigation from `SplashPage` to `MainNavigationPage`.
 
 Cubits are tested with `bloc_test` (dev dependency) against hand-written fake repositories (implementing the feature's abstract `Repository` interface) rather than a mocking framework — simple enough given each repository has one or two methods. Repositories are tested directly against their simulated/hardcoded data. Follow this pattern for new features: fake the repository, assert emitted state sequences with `blocTest`.
 
@@ -35,14 +35,20 @@ Feature-First organization under `lib/features/`, each feature module structured
 
 ```
 features/<feature>/
-  cubits/       # <Feature>Cubit (state/business logic) + <Feature>State (Equatable, sealed via abstract base class)
-  data/
-    models/     # plain data classes for the feature
-    repositories/  # abstract <Feature>Repository + concrete <Feature>RepositoryImpl
-  views/        # <Feature>Page (StatelessWidget, wires BlocProvider) + <Feature>View (renders based on state)
+  presentation/   # depends on domain/
+    cubits/       # <Feature>Cubit (state/business logic) + <Feature>State (Equatable, sealed via abstract base class)
+    views/        # <Feature>Page (StatelessWidget, wires BlocProvider) + <Feature>View (renders based on state); widgets/ for widgets local to the view
+  domain/         # pure Dart, depends on nothing
+    entities/     # <Feature>...Entity — plain business data classes (no Flutter types such as IconData)
+    repositories/ # abstract <Feature>Repository (the contract)
+  data/           # depends on domain/
+    models/       # <Feature>...Model extends the entity (where fromJson/toJson will live)
+    repositories/ # concrete <Feature>RepositoryImpl (file: <feature>_repository_impl.dart)
 ```
 
-Shared/global code lives in `lib/core/`: `constants/app_colors.dart` (color palette), `theme/app_theme.dart` (Material 3 `ThemeData`), `widgets/` (reusable widgets like `custom_button.dart`, `custom_drawer.dart`).
+Features with no business rules or data access (`splash`, `navigation`) only have `presentation/`. Cubits, states and widgets import entities from `domain/`, never models from `data/`; the only `presentation/` → `data/` reference is the `<Feature>Page` instantiating the `RepositoryImpl`.
+
+The app root lives in `lib/app/app.dart` (`App`, run by `main.dart`). Shared/global code lives in `lib/core/`: `constants/app_colors.dart` (color palette), `theme/app_theme.dart` (Material 3 `ThemeData`), `widgets/` (reusable widgets like `custom_button.dart`, `custom_drawer.dart`).
 
 Current features: `splash`, `navigation`, `home`, `pix`.
 
@@ -52,14 +58,14 @@ Every feature follows the same wiring convention — replicate it exactly for ne
 
 - A `<Feature>Page` (`StatelessWidget`) creates the `BlocProvider` and instantiates the Cubit with a concrete repository implementation, e.g. `HomeCubit(repository: HomeRepositoryImpl())..loadData()`.
 - The `<Feature>View` consumes state via `BlocBuilder`/`BlocListener` and contains no business logic or direct data access.
-- Cubits depend on the repository's *abstract* interface, never the concrete implementation (dependency inversion — see `solid.md`), which is what makes them swappable/mockable in tests.
+- Cubits depend on the repository's *abstract* interface, never the concrete implementation (dependency inversion — see the "SOLID principles" section in `README.md`), which is what makes them swappable/mockable in tests.
 - States extend an abstract `Equatable` base class per feature (e.g. `HomeState` → `HomeInitialState`, `HomeLoadingState`, `HomeSuccessState`, `HomeErrorState`). Follow this Initial/Loading/Success/Error shape for new features.
 - Repositories currently return hardcoded/simulated data with an artificial `Future.delayed` — there is no real backend or persistence layer yet.
 
 ### Navigation flow
 
-`main.dart` → `SplashPage` (runs `SplashCubit.initApp()`, a timed delay) → on `SplashCompletedState`, pushes `MainNavigationPage` (fade transition). `MainNavigationPage` owns a `NavigationCubit` (tracks the selected tab index) and switches between `HomePage`/`PixPage` via `IndexedStack`, driven by a bottom `NavigationBar` plus a `CustomDrawer` opened from the "Menu" destination.
+`main.dart` → `App` (`lib/app/app.dart`, the `MaterialApp` with theme and initial page) → `SplashPage` (runs `SplashCubit.initApp()`, a timed delay) → on `SplashCompletedState`, pushes `MainNavigationPage` (fade transition). `MainNavigationPage` owns a `NavigationCubit` (tracks the selected tab index) and switches between `HomePage`/`PixPage` via `IndexedStack`, driven by a bottom `NavigationBar` plus a `CustomDrawer` opened from the "Menu" destination.
 
 ### SOLID notes
 
-`solid.md` documents how each SOLID principle maps onto this codebase (per-feature repository abstractions, Cubit constructor injection, Equatable state hierarchies, etc.) — read it before making architectural changes, since new code is expected to follow the same reasoning.
+The "SOLID principles" section in `README.md` documents how each SOLID principle maps onto this codebase (per-feature repository abstractions in `domain/`, Cubit constructor injection, Equatable state hierarchies, etc.) — read it before making architectural changes, since new code is expected to follow the same reasoning.
