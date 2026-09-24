@@ -1,0 +1,62 @@
+name: Web Release
+
+on:
+  push:
+    branches: ["main"]
+
+  pull_request:
+    branches: ["main"]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Create Web Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+          channel: "stable"
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Start Web Release Build
+        run: flutter build web --release
+
+      - name: Upload Web Build Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-release
+          path: ./build/web
+          # Keeps web/.htaccess (the deep-link rewrite) in the artifact;
+          # upload-artifact skips dotfiles by default.
+          include-hidden-files: true
+
+  web-deploy:
+    name: 🎉 Deploy
+    needs: [build]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/download-artifact@v4
+        with:
+          name: web-release
+          path: ./build/web
+
+      - name: 📂 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          local-dir: ./build/web/
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./
