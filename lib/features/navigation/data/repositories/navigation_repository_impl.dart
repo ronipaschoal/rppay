@@ -15,7 +15,7 @@ class NavigationRepositoryImpl implements NavigationRepository {
         'label': 'Card',
         'icon': 'credit_card',
         'url':
-            'https://webview.ronipaschoal.com.br/rppay/card?name={user.name}',
+            'https://webview.ronipaschoal.com.br/rppay/card?name={user.firstName}',
       },
       {'type': 'drawer', 'label': 'Menu', 'icon': 'menu'},
     ];
