@@ -46,11 +46,11 @@ features/<feature>/
     repositories/ # concrete <Feature>RepositoryImpl (file: <feature>_repository_impl.dart)
 ```
 
-Features with no business rules or data access (`splash`, `navigation`) only have `presentation/`. Cubits, states and widgets import entities from `domain/`, never models from `data/`; the only `presentation/` → `data/` reference is the `<Feature>Page` instantiating the `RepositoryImpl`.
+Features with no business rules or data access (`splash`) only have `presentation/`; features with no screen of their own (`user`) only have `domain/` and `data/`. Cubits, states and widgets import entities from `domain/`, never models from `data/`; the only `presentation/` → `data/` reference is the `<Feature>Page` instantiating the `RepositoryImpl`.
 
 The app root lives in `lib/app/app.dart` (`App`, run by `main.dart`). Shared/global code lives in `lib/core/`: `constants/app_colors.dart` (color palette), `theme/app_theme.dart` (Material 3 `ThemeData`), `widgets/` (reusable widgets like `custom_button.dart`, `custom_drawer.dart`).
 
-Current features: `splash`, `navigation`, `home`, `pix`.
+Current features: `splash`, `navigation`, `home`, `pix`, `user`.
 
 ### State management pattern
 
@@ -64,7 +64,7 @@ Every feature follows the same wiring convention — replicate it exactly for ne
 
 ### Navigation flow
 
-`main.dart` → `App` (`lib/app/app.dart`, the `MaterialApp` with theme and initial page) → `SplashPage` (runs `SplashCubit.initApp()`, a timed delay) → on `SplashCompletedState`, pushes `MainNavigationPage` (fade transition). `MainNavigationPage` owns a `NavigationCubit` (tracks the selected tab index) and switches between `HomePage`/`PixPage` via `IndexedStack`, driven by a bottom `NavigationBar` plus a `CustomDrawer` opened from the "Menu" destination.
+`main.dart` → `App` (`lib/app/app.dart`, the `MaterialApp` with theme and initial page) → `SplashPage` (runs `SplashCubit.initApp()`, a timed delay) → on `SplashCompletedState`, pushes `MainNavigationPage` (fade transition). `MainNavigationPage` owns a `NavigationCubit` that loads the bottom-bar menus from `NavigationRepository` (simulated API returning JSON) and tracks the selected index. Each menu has a `label`, an `icon` name and a `NavigationMenuType`: `page` (native page, looked up by `route` in `navigationPages`), `webview` (opens `url` with `WebViewPage` from the `webview_page` git package, restricted to `WebViewConstants.allowedHosts` in `lib/core/constants/`) or `drawer` (opens `CustomDrawer` instead of switching tabs). Invalid/unknown menus are dropped by `NavigationMenuModel.fromJson`, and `page` menus whose route isn't registered are dropped by the cubit (`pageRoutes`). `NavigationCubit` also loads the user (`UserRepository`, in parallel with the menus), keeps it in `NavigationSuccessState.user` (the view passes name/account to `CustomDrawer`) and replaces `{user.name}`, `{user.firstName}`, `{user.agency}`, `{user.account}` placeholders in webview urls, url-encoded; a menu with an unknown placeholder is dropped. To expose a new native page or icon to the API, register it in `lib/features/navigation/presentation/views/navigation_registry.dart`. Widget tests that build `MainNavigationPage` must call `FakeWebViewPlatform.install()` (from `package:webview_page/testing.dart`).
 
 ### SOLID notes
 

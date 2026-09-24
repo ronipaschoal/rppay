@@ -95,13 +95,24 @@ lib/
 │   │           └── splash_view.dart           # Splash interface
 │   │
 │   ├── navigation/                            # 🧭 Main navigation
-│   │   └── presentation/
-│   │       ├── cubits/
-│   │       │   ├── navigation_cubit.dart      # Active tab management
-│   │       │   └── navigation_state.dart      # Navigation state
-│   │       │
-│   │       └── views/
-│   │           └── main_navigation_view.dart  # Main navigation
+│   │   ├── presentation/
+│   │   │   ├── cubits/
+│   │   │   │   ├── navigation_cubit.dart      # Menu loading + active tab management
+│   │   │   │   └── navigation_state.dart      # Navigation states
+│   │   │   │
+│   │   │   └── views/
+│   │   │       ├── main_navigation_view.dart  # Main navigation (built from the menus)
+│   │   │       └── navigation_registry.dart   # Native pages/icons the API can reference
+│   │   ├── domain/
+│   │   │   ├── entities/
+│   │   │   │   └── navigation_menu_entity.dart
+│   │   │   └── repositories/
+│   │   │       └── navigation_repository.dart
+│   │   └── data/
+│   │       ├── models/
+│   │       │   └── navigation_menu_model.dart # fromJson/toJson (invalid menus are ignored)
+│   │       └── repositories/
+│   │           └── navigation_repository_impl.dart # Simulated menus API
 │   │
 │   ├── home/                                  # 🏠 Dashboard / Home
 │   │   ├── domain/
@@ -178,7 +189,7 @@ The structure follows a **Feature-First** approach, where each feature has its o
 * **`data/models/`** — the data models, which extend the domain entities and are where serialization (JSON, Firebase, etc.) will live.
 * **`data/repositories/`** — the concrete repository implementations, allowing the data source to be swapped later without directly impacting the presentation layer.
 
-Features without business rules or data access (`splash`, `navigation`) only have `presentation/`.
+Features without business rules or data access (`splash`) only have `presentation/`; features without a screen of their own (`user`) only have `domain/` and `data/`.
 
 This organization aims to favor **separation of concerns, low coupling, and ease of maintenance**, applying **SOLID** principles whenever it makes sense for the application's context.
 
@@ -268,6 +279,18 @@ claude mcp list
 ## 🌐 API and data
 
 The project currently runs **locally**, with no dependency on external services.
+
+The bottom navigation menus come from a simulated API (`NavigationRepositoryImpl`). Each menu is a native page (`"type": "page"`, referenced by `route`), a webview (`"type": "webview"`, opened by [`webview_page`](https://github.com/ronipaschoal/webview_page) and restricted to `WebViewConstants.allowedHosts`) or the drawer (`"type": "drawer"`):
+
+```json
+[
+  {"type": "page", "label": "Home", "icon": "home", "route": "home"},
+  {"type": "webview", "label": "Card", "icon": "credit_card", "url": "https://webview.ronipaschoal.com.br/rppay/card?name={user.firstName}"},
+  {"type": "drawer", "label": "Menu", "icon": "menu"}
+]
+```
+
+Webview urls may contain `{user.name}`, `{user.firstName}`, `{user.agency}` and `{user.account}` placeholders, which the app fills (url-encoded) with the logged-in user from `UserRepository` (the `user` feature, also a simulated API). A menu with an unknown placeholder is dropped.
 
 > TODO: define the API used and the backend communication strategy.
 
