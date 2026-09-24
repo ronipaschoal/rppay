@@ -28,15 +28,23 @@ class CreditCardBanner extends StatelessWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.credit_card, color: AppColors.primary),
-                  SizedBox(width: 8),
-                  Text(
-                    'Cartão de Crédito',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
+              Flexible(
+                child: Row(
+                  children: [
+                    Icon(Icons.credit_card, color: AppColors.primary),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Cartão de Crédito',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],

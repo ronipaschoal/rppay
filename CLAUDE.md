@@ -48,7 +48,7 @@ features/<feature>/
 
 Features with no business rules or data access (`splash`) only have `presentation/`; features with no screen of their own (`user`) only have `domain/` and `data/`. Cubits, states and widgets import entities from `domain/`, never models from `data/`; the only `presentation/` → `data/` reference is the `<Feature>Page` instantiating the `RepositoryImpl`.
 
-The app root lives in `lib/app/app.dart` (`App`, run by `main.dart`). Shared/global code lives in `lib/core/`: `constants/app_colors.dart` (color palette), `theme/app_theme.dart` (Material 3 `ThemeData`), `widgets/` (reusable widgets like `custom_button.dart`, `custom_drawer.dart`).
+The app root lives in `lib/app/app.dart` (`App`, run by `main.dart`); its `MaterialApp.builder` wraps everything in `DeviceFrame` (`lib/core/widgets/device_frame.dart`), which on screens ≥ 600px wide renders the app at phone size (390×844) inside a simulated phone frame, overriding `MediaQuery` size/padding. Shared/global code lives in `lib/core/`: `constants/app_colors.dart` (color palette), `theme/app_theme.dart` (Material 3 `ThemeData`), `widgets/` (reusable widgets like `custom_button.dart`, `custom_drawer.dart`).
 
 Current features: `splash`, `navigation`, `home`, `pix`, `user`.
 
